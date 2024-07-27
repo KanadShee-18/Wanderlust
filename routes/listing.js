@@ -2,11 +2,25 @@ const express = require("express");
 const router = express.Router();
 const wrapAsync = require("../utills/wrapAsync.js");
 const Listing = require("../models/listing.js");
-const { isLoggedIn, isOwner, validateListing } = require("../middleware.js");
+const {
+  isLoggedIn,
+  isOwner,
+  validateListing,
+  multerErrorHandler,
+} = require("../middleware.js");
 const listingController = require("../controllers/listings.js");
 const multer = require("multer");
 const { storage } = require("../cloudConfig.js");
-const upload = multer({ storage });
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 100 * 1024 }, // 100KB limit
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image files are allowed!"), false);
+    }
+    cb(null, true);
+  },
+});
 
 // Index, Create Route:
 router
@@ -15,6 +29,7 @@ router
   .post(
     isLoggedIn,
     upload.single("listing[image]"),
+    multerErrorHandler,
     validateListing,
     wrapAsync(listingController.createNewListing)
   );
@@ -30,6 +45,7 @@ router
     isLoggedIn,
     isOwner,
     upload.single("listing[image]"),
+    multerErrorHandler,
     validateListing,
     wrapAsync(listingController.updateListing)
   )
