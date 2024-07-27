@@ -81,6 +81,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/", async (req, res) => {
+  await res.redirect("/listings");
+});
+
 app.use("/listings", listingRouter);
 app.use("/listings/:id/review", reviewRouter);
 app.use("/", userRouter);

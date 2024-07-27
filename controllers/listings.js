@@ -2,9 +2,11 @@ const Listing = require("../models/listing");
 const mbxGeocoding = require("@mapbox/mapbox-sdk/services/geocoding");
 const mapToken = process.env.MAP_TOKEN;
 const geocodingClient = mbxGeocoding({ accessToken: mapToken });
+const cloudinary = require("cloudinary").v2;
 
 module.exports.index = async (req, res) => {
   const allListings = await Listing.find({});
+  console.log(allListings);
   res.render("listings/index.ejs", { allListings });
 };
 
@@ -63,16 +65,46 @@ module.exports.editSingleListing = async (req, res) => {
   res.render("listings/edit.ejs", { listing, originalImgUrl });
 };
 
-module.exports.updateListing = async (req, res) => {
-  let { id } = req.params;
-  let listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing });
+// module.exports.updateListing = async (req, res) => {
+//   let { id } = req.params;
+//   let listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing });
 
-  if (typeof req.file != "undefined") {
-    let url = req.file.path;
-    let filename = req.file.filename;
-    listing.image = { url, filename };
-    await listing.save();
+//   if (typeof req.file !== "undefined") {
+//     let url = req.file.path;
+//     let filename = req.file.filename;
+//     listing.image = { url, filename };
+//     await listing.save();
+//   }
+
+//   req.flash("success", "Listing has been updated.");
+//   res.redirect(`/listings/${id}`);
+// };
+
+module.exports.updateListing = async (req, res) => {
+  const { id } = req.params;
+  let listing = await Listing.findById(id);
+
+  if (!listing) {
+    req.flash("error", "Requested Listing doesn't exist!");
+    return res.redirect("/listings");
   }
+
+  // Check if a new file is uploaded
+  if (req.file) {
+    // Delete the old image from Cloudinary if it exists
+    if (listing.image && listing.image.filename) {
+      await cloudinary.uploader.destroy(listing.image.filename);
+    }
+
+    // Update the listing with the new image
+    const { path: url, filename } = req.file;
+    listing.image = { url, filename };
+  }
+
+  // Update other listing fields
+  await Listing.findByIdAndUpdate(id, { ...req.body.listing });
+
+  await listing.save();
 
   req.flash("success", "Listing has been updated.");
   res.redirect(`/listings/${id}`);

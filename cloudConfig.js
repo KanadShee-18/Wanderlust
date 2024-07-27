@@ -12,7 +12,10 @@ const storage = new CloudinaryStorage({
   params: {
     folder: "wanderlust_DEV",
     allowedFormats: ["png", "jpg", "jpeg"],
-    public_id: (req, file) => "computed-filename-using-request",
+    public_id: (req, file) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      return file.originalname.split(".")[0] + "-" + uniqueSuffix;
+    },
   },
 });
 
