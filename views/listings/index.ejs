@@ -248,10 +248,10 @@
           <p class="card-text">
             <b><%= listing.title %></b> <br />
             <% if (listing.price !== null && listing.price !== undefined) { %>
-            <b class="listingPrice"
+            <b class="listingPrice" data-price="<%=listing.price%>"
               ><%= listing.price.toLocaleString("en-IN") %> /night
             </b>
-            <i class="listingPrice tax-info"> &nbsp; +18% GST</i>
+            <!-- <i class="listingPrice tax-info"> &nbsp; +18% GST</i> -->
             <% } %>
           </p>
         </div>
@@ -261,7 +261,7 @@
   </div>
 </div>
 
-<script>
+<!-- <script>
   let taxSwitch = document.getElementById("flexSwitchCheckDefault");
   taxSwitch.addEventListener("click", () => {
     let taxInfo = document.getElementsByClassName("tax-info");
@@ -270,6 +270,30 @@
         eachInfo.style.display = "inline";
       } else {
         eachInfo.style.display = "none";
+      }
+    }
+  });
+</script> -->
+
+<!-- Price Display with taxes when switch is clicked -->
+
+<script>
+  let taxSwitch = document.getElementById("flexSwitchCheckDefault");
+  taxSwitch.addEventListener("click", () => {
+    let listingPriceElements = document.querySelectorAll(
+      ".listingPrice[data-price]"
+    );
+    for (let listingPriceElement of listingPriceElements) {
+      let originalPrice = parseFloat(
+        listingPriceElement.getAttribute("data-price")
+      );
+      if (taxSwitch.checked) {
+        let priceWithTax = originalPrice + (originalPrice * 18) / 100;
+        listingPriceElement.textContent =
+          priceWithTax.toLocaleString("en-IN") + " /night (with GST)";
+      } else {
+        listingPriceElement.textContent =
+          originalPrice.toLocaleString("en-IN") + " /night";
       }
     }
   });
